@@ -28,5 +28,9 @@ object IRCParserSpec extends Specification {
       ":foo TOPIC #test :new topic" must parseTo(IRCMessage(
         Some("foo"), "TOPIC", List("#test"), Some("new topic")))
     }
+
+    "parse a ping message" in {
+      "PING :123" must parseTo(IRCMessage(None, "PING", List(), Some("123")))
+    }
   }
 }
