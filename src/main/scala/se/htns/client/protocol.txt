@@ -1,0 +1,6 @@
+
+<<< { type: 'event', serverID: 'freenode', 
+      rawMessage: { prefix: "WiZ", (optional)
+                    command: "NICK",
+                    params: ["WiZ`Away"],
+                    text: (optional) } }

@@ -14,11 +14,10 @@ object IRCParser extends RegexParsers {
   val trailing = ":" ~> """.*""".r
 
   val message =
-  opt(prefix) ~ command ~ params ~ opt(trailing) ^^
-          {
-            case prefix ~ command ~ params ~ trailing =>
-              IRCMessage(prefix, command, params, trailing)
-          }
+    opt(prefix) ~ command ~ params ~ opt(trailing) ^^ {
+      case prefix ~ command ~ params ~ trailing =>
+        IRCMessage(prefix, command, params, trailing)
+    }
 
   def parseMessage (string: String) =
     parse(message, string) match {

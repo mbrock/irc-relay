@@ -1,13 +1,15 @@
 package se.htns.irc
 
+import se.htns.lineio._
+
 import scala.actors._
 import utilities.BinarySemaphore
 
 class IRCServerHandler (val lineSocket: LineSocket,
                         val serverInfo: IRCServerInfo)
-        extends IRCServerLogic
-                with HasLineWritingThread
-                with HasLineReadingThread {
+    extends IRCServerLogic
+       with HasLineWritingThread
+       with HasLineReadingThread {
 
   def handleLine (line: String) : Unit = {
     IRCParser parseMessage line match {

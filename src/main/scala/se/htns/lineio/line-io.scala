@@ -1,5 +1,4 @@
-package se.htns.irc
-
+package se.htns.lineio
 
 import actors.{Channel, Actor}
 import java.io._
@@ -15,7 +14,8 @@ abstract class LineSocket extends Iterable[String] {
 class TCPLineSocket (socket: Socket) extends LineSocket {
   def this (host: String, port: Int) = this (new Socket(host, port))
 
-  private val reader = new BufferedReader(new InputStreamReader(socket.getInputStream))
+  private val reader = new BufferedReader(new InputStreamReader(
+      socket.getInputStream))
   private val writer = new DataOutputStream(socket.getOutputStream)
 
   override def readLine = reader.readLine
@@ -30,23 +30,18 @@ trait HasLineSocket {
 trait HasLineReadingThread extends HasLineSocket {
   def handleLine (line: String): Unit
 
-  private object t extends Thread {
+  (new Thread {
     override def run {
       lineSocket foreach handleLine
       handleEOF
     }
-  }
-  
-  t start
+   }).start
 }
 
 trait HasLineWritingThread extends HasLineSocket {
   private val lineWritingActor: Actor = Actor.actor {
     Actor.loop { 
-      Actor.receive {
-        case line: String =>
-          lineSocket writeLine line
-      }
+      Actor.receive { case line: String => lineSocket writeLine line }
     }
   }
 
