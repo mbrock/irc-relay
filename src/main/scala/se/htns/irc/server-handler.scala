@@ -1,12 +1,14 @@
 package se.htns.irc
 
 import se.htns.lineio._
+import se.htns.client.ClientBroadcaster
 
 import scala.actors._
 import utilities.BinarySemaphore
 
 class IRCServerHandler (val lineSocket: LineSocket,
-                        val serverInfo: IRCServerInfo)
+                        val serverInfo: IRCServerInfo,
+                        val clientBroadcaster: ClientBroadcaster)
     extends IRCServerLogic
        with HasLineWritingThread
        with HasLineReadingThread {
