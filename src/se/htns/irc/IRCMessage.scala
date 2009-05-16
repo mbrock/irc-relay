@@ -34,6 +34,3 @@ case class IRCMessage (prefix: Option[String],
   val toIRCString = prefix.map(":" + _ + " ").getOrElse("") + command +
           " " + params.mkString(" ") + text.map(" :" + _).getOrElse("")
 }
-
-case class ReceivedIRCMessage (message: IRCMessage)
-case class SendIRCMessage (message: IRCMessage)

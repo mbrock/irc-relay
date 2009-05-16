@@ -5,7 +5,9 @@ import org.specs.matcher.Matcher
 import org.specs.Specification
 
 object IRCParserSpec extends Specification {
-  "IRC message parser" should {
+  def parse = addToSusVerb("parse")
+
+  "IRC message parser" should parse {
     case class parseTo (expected: IRCMessage) extends Matcher[String]() {
       def apply (s: => String) =
         IRCParser parseMessage s match {
@@ -15,21 +17,21 @@ object IRCParserSpec extends Specification {
         }
     }
 
-    "parse a trivial numeric message" in {
+    "a trivial numeric message" in {
       "123" must parseTo(IRCMessage(None, "123", List(), None))
     }
 
-    "parse a full numeric message" in {
+    "a full numeric message" in {
       ":foo 123 bar baz :suffix stuff" must parseTo(IRCMessage(
         Some("foo"), "123", List("bar", "baz"), Some("suffix stuff")))
     }
 
-    "parse a symbolic message" in {
+    "a symbolic message" in {
       ":foo TOPIC #test :new topic" must parseTo(IRCMessage(
         Some("foo"), "TOPIC", List("#test"), Some("new topic")))
     }
 
-    "parse a ping message" in {
+    "a ping message" in {
       "PING :123" must parseTo(IRCMessage(None, "PING", List(), Some("123")))
     }
   }

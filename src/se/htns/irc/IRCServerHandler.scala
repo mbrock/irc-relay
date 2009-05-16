@@ -1,42 +1,25 @@
 package se.htns.irc
 
-
 import scala.actors._
+import utilities.BinarySemaphore
 
-class IRCServerHandler (socket: LineSocket,
-                        serverInfo: IRCServerInfo) extends Actor {
-  val serverReader = new IRCServerLineReader(socket, this)
-  val serverWriter = new IRCServerLineWriter(socket)
+class IRCServerHandler (val lineSocket: LineSocket,
+                        val serverInfo: IRCServerInfo)
+        extends IRCServerLogic
+                with HasLineWritingThread
+                with HasLineReadingThread {
 
-  def act () {
-    serverReader.start
-    serverWriter.start
-    Actor.loop {
-      react {
-        case ReceivedIRCMessage(message) =>
-          println("<= " + serverInfo + ": " + message)
-          handleMessage(message)
-        case SendIRCMessage(message) =>
-          println("=> " + serverInfo + ": " + message)
-          serverWriter ! message
-      }
+  def handleLine (line: String) : Unit = {
+    IRCParser parseMessage line match {
+      case Some(message) => handleIRCServerMessage(message)
+      case None => println("!! " + serverInfo + " crazy: " + line)
     }
   }
 
-  def handleMessage (message: IRCMessage): Unit = {
-    message.command match {
-      case "PING" => send("PONG", List(), message.text)
-      case _ => ()
-    }
+  def handleEOF : Unit = handleIRCServerEOF
+
+  def sendIRCServerMessage (message: IRCMessage) : Unit = {
+    println("=> " + serverInfo + ": " + message)
+    writeLine(message.toIRCString)
   }
-
-  def send (command: String, params: List[String],
-            text: Option[String]): Unit =
-    this ! SendIRCMessage(IRCMessage(None, command, params, text))
-
-  def send (command: String, params: List[String]): Unit =
-    send(command, params, None)
-
-  def send (command: String): Unit =
-    send(command, List())
 }
