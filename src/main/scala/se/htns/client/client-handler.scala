@@ -24,14 +24,9 @@ trait ClientLogic {
 class ClientHandler (val lineSocket: LineSocket)
     extends ClientLogic with HasLineReadingThread with HasLineWritingThread
 {
-  def handleLine (line: String): Unit =
-    handleClientMessage(Json parse line)
-
-  def handleEOF : Unit =
-    println("client EOF")
-
-  def sendClientMessage (message: Any) : Unit =
-    writeLine(Json.build(message).toString)
+  def sendClientMessage (message: Any) = writeLine(Json build message toString)
+  def handleLine (line: String)        = handleClientMessage(Json parse line)
+  def handleEOF                        = println("client EOF")
 }
 
 class ClientAccepter (serverSocket: ServerSocket) 
