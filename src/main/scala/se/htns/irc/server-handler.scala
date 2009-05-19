@@ -8,6 +8,7 @@ import utilities.BinarySemaphore
 
 class IRCServerHandler (val lineSocket: LineSocket,
                         val serverInfo: IRCServerInfo,
+                        val userInfo: IRCUserInfo,
                         val clientBroadcaster: ClientBroadcaster)
     extends IRCServerLogic
        with HasLineWritingThread
@@ -27,3 +28,4 @@ class IRCServerHandler (val lineSocket: LineSocket,
     writeLine(message.toIRCString)
   }
 }
+

@@ -4,13 +4,25 @@ import se.htns.client.ClientBroadcaster
 
 import utilities.BinarySemaphore
 
-case class IRCServerInfo (id: Int) {
+case class IRCServerInfo (id: String, hostname: String, port: Int) {
   def jsonize = id
 }
 
+case class IRCUserInfo (nickname: String, username: String, realname: String)
+
 trait IRCServerLogic {
   val serverInfo: IRCServerInfo
+  val userInfo: IRCUserInfo
   val clientBroadcaster: ClientBroadcaster
+
+  def login: Unit = {
+    sendIRCServerMessage(
+      IRCMessage(None, "USER", 
+                 List(userInfo.username, "0", "0"),
+                 Some(userInfo.realname)))
+    sendIRCServerMessage(
+      IRCMessage(None, "NICK", List(userInfo.nickname), None))
+  }
 
   def broadcastClientMessage (message: Any): Unit =
     clientBroadcaster broadcastClientMessage message

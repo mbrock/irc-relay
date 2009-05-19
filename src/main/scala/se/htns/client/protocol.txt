@@ -1,4 +1,6 @@
 
+>>> { command: 'connect', data: { server: 'irc.se.freenode.net', 
+                                  serverID: 'freenode' } }
 <<< { type: 'event', serverID: 'freenode', 
       rawMessage: { prefix: "WiZ", (optional)
                     command: "NICK",
