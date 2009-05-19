@@ -14,6 +14,8 @@ class IRCServerHandler (val lineSocket: LineSocket,
        with HasLineWritingThread
        with HasLineReadingThread {
 
+  val serverID = serverInfo.id
+
   def handleLine (line: String) : Unit = {
     IRCParser parseMessage line match {
       case Some(message) => handleIRCServerMessage(message)

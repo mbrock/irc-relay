@@ -2,6 +2,7 @@
 package se.htns.client
 
 import se.htns.irc._
+import se.htns.io._
 
 import java.net._
 
@@ -14,10 +15,10 @@ trait ClientBroadcaster {
 }
 
 class Multiplexer (val serverSocket: ServerSocket,
-                   val userInfo: IRCUserInfo) extends ClientBroadcaster {
+                   userInfo: IRCUserInfo) 
+    extends TCPAccepter with ClientBroadcaster {
   var servers: Set[IRCServerHandler] = Set()
   var clients: Set[ClientHandler] = Set()
-  val multiplexer: Multiplexer = this
 
   def addServerConnection (info: IRCServerInfo): Unit = {
     val socket = new TCPLineSocket(info.hostname, info.port)
@@ -30,18 +31,18 @@ class Multiplexer (val serverSocket: ServerSocket,
     this synchronized { clients foreach (_.sendClientMessage(message)) }
   }
 
-  object accepterThread extends Thread {
-    override def run = {
-      while (true) {
-        val socket = serverSocket.accept
-        this synchronized {
-          clients += new ClientHandler(new TCPLineSocket(socket), multiplexer)
-        }
-      }
+  def sendIRCServerMessage (serverID: String, message: IRCMessage): Unit = {
+    servers find (_.serverID == serverID) match {
+      case Some(server) =>
+        server sendIRCServerMessage message
+      case _ =>
+        println("no such server '`(")
     }
   }
 
-  accepterThread.start
+  def handleNewSocket (socket: Socket): Unit =
+    this synchronized { clients += 
+      new ClientHandler(new TCPLineSocket(socket), this) } 
 }
 
 trait ClientLogic {
@@ -67,6 +68,8 @@ trait ClientLogic {
     command match {
       case "connect" =>
         handleConnectCommand(data)
+      case "join" =>
+        handleJoinCommand(data)
       case _ =>
         println("unhandled command: " + command)
     }
@@ -78,6 +81,16 @@ trait ClientLogic {
         multiplexer addServerConnection IRCServerInfo(id, hostname, port)
       case _ =>
         println("buggy connect message data: " + data)
+    }
+  }
+
+  def handleJoinCommand (data: Map[String, Any]) : Unit = {
+    (data get "serverID", data get "channel") match {
+      case (Some(id: String), Some(channel: String)) =>
+        multiplexer sendIRCServerMessage (id,
+          IRCMessage(None, "JOIN", List(channel), None))
+      case _ =>
+        println("buggy join message data: " + data)
     }
   }
 }

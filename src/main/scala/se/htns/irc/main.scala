@@ -9,6 +9,7 @@ object Test {
     val multiplexer = new Multiplexer(
       new ServerSocket(7776),
       IRCUserInfo("mirakel", "mirakel", "mirakel"))
+    multiplexer.start
     
     while (true)
       Thread sleep 10000
