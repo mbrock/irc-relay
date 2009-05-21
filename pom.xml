@@ -14,6 +14,11 @@
       <name>Scala-tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
+    <repository>
+      <id>codehaus.org</id>
+      <name>GuessEncoding Central Repository</name>
+      <url>dav:https://dav.codehaus.org/repository/guessencoding/</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -54,6 +59,12 @@
       <scope>test</scope>
       <optional>true</optional>
     </dependency>
+
+    <dependency>
+      <groupId>org.codehaus.guessencoding</groupId>
+      <artifactId>guessencoding</artifactId>
+      <version>1.0</version>
+    </dependency>      
   </dependencies>
 
   <build>

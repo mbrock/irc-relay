@@ -1,10 +1,10 @@
 package se.htns.irc
 
 import se.htns.lineio._
+import se.htns.utilities._
 import se.htns.client.ClientBroadcaster
 
 import scala.actors._
-import utilities.BinarySemaphore
 
 class IRCServerHandler (val lineSocket: LineSocket,
                         val serverInfo: IRCServerInfo,
@@ -16,11 +16,13 @@ class IRCServerHandler (val lineSocket: LineSocket,
 
   val serverID = serverInfo.id
 
-  def handleLine (line: String) : Unit =
-    IRCParser parseMessage line match {
+  def handleLine (line: String) : Unit = {
+    val decoded = CharsetGuesser decode line
+    IRCParser parseMessage decoded match {
       case Some(message) => handleIRCServerMessage(message)
-      case None => println("!! " + serverInfo + " crazy: " + line)
+      case None => println("!! " + serverInfo + " crazy: " + decoded)
     }
+  }
 
   def handleEOF : Unit = handleIRCServerEOF
 

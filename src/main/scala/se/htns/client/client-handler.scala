@@ -3,6 +3,7 @@ package se.htns.client
 
 import se.htns.irc._
 import se.htns.io._
+import se.htns.utilities._
 
 import java.net._
 
@@ -105,6 +106,7 @@ class ClientHandler (val lineSocket: LineSocket,
     extends ClientLogic with HasLineReadingThread with HasLineWritingThread
 {
   def sendClientMessage (message: Any) = writeLine(Json build message toString)
-  def handleLine (line: String)        = handleClientMessage(Json parse line)
+  def handleLine (line: String)        = 
+    handleClientMessage(Json parse (CharsetGuesser decode line))
   def handleEOF                        = println("client EOF")
 }
