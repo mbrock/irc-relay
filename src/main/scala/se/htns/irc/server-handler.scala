@@ -16,12 +16,11 @@ class IRCServerHandler (val lineSocket: LineSocket,
 
   val serverID = serverInfo.id
 
-  def handleLine (line: String) : Unit = {
+  def handleLine (line: String) : Unit =
     IRCParser parseMessage line match {
       case Some(message) => handleIRCServerMessage(message)
       case None => println("!! " + serverInfo + " crazy: " + line)
     }
-  }
 
   def handleEOF : Unit = handleIRCServerEOF
 
