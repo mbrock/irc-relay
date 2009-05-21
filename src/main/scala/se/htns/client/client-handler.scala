@@ -96,6 +96,7 @@ trait ClientLogic {
       case (Some(id: String), Some(receiver: String), Some(text: String)) =>
         multiplexer sendIRCServerMessage (id,
           IRCMessage(None, "PRIVMSG", List(receiver), Some(text)))
+        multiplexer broadcastClientMessage(data)
       case _ =>
         println("buggy privmsg message data: " + data)
     }
