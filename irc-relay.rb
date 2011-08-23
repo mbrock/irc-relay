@@ -30,11 +30,15 @@ class IRCMessage
   end
 
   def self.decode(s)
-    if s =~ /^(?:[:@]([^\s]+) )?([^\s]+)(?: ((?:[^:\s][^\s]* ?)*))?(?: ?:(.*))?$/
+    puts 'Trying to decode: ' + s
+    if s =~ /^(?:[:@](\S+) )?(\S+)(?: ((?:[^:\s]\S* ?)*))?(?: ?:(.*))?$/
       prefix, cmd, @params, text = $1, $2, $3, $4
       prefix = nil if prefix.nil?
       text = nil if text.nil?
+      puts 'hmm'
       new(prefix, cmd, @params, text)
+    else
+      puts 'UH OH'
     end
   end
 end
@@ -80,10 +84,9 @@ class IRCRelayServer < GServer
   end
 
   def serve(io)
-    name = io.gets
+    name = io.gets.gsub(/\n/, "")
     @user = IRCRelayUser.new(name)
     if io.gets =~ /^c (.*) (.*)$/
-      puts "coooonnecting #$1 #$2"
       @user.connect $1, $2, name, name, name
     else
       io.puts "WTF?"
