@@ -31,7 +31,7 @@ class IRCMessage
 
   def self.decode(s)
     puts 'Trying to decode: ' + s
-    if s =~ /^(?:[:@](\S+) )?(\S+)(?: ((?:[^:\s]\S* ?)*))?(?: ?:(.*))?$/
+    if s =~ /^(?:[:@](\S+) )?(\S+)(?: ((?:[^:\s]\S* ?)*))?(?:(?:.*))?$/
       prefix, cmd, @params, text = $1, $2, $3, $4
       prefix = nil if prefix.nil?
       text = nil if text.nil?
