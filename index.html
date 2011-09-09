@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script>
+      function init() {
+        function debug(string) {
+          var element = document.getElementById("debug");
+          var p = document.createElement("p");
+          p.innerHTML += string;
+/*          p.appendChild(document.createTextNode(string)); */
+          element.appendChild(p);
+        }
+
+        var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
+        var ws = new Socket("ws://localhost:1337/");
+        ws.onmessage = function(evt) { debug("Message: " + evt.data); };
+        ws.onclose = function() { debug("socket closed"); };
+        ws.onopen = function() {
+          debug("connected...");
+          ws.send("hello server");
+          ws.send("hello again");
+        };
+      };
+    </script>
+  </head>
+  <body onload="init();">
+    <div id="debug"></div>
+  </body>
+</html>
