@@ -27,42 +27,7 @@ class MyHttpServer < EM::Connection
   end
 end
 
-class IRCMessage
-  attr_accessor :prefix, :command, :params, :text
-
-  def initialize(prefix, command, params, text)
-    @prefix, @command, @params, @text = prefix, command, params, text
-  end
-  
-  def encode
-    p [command, @params]
-    if @params.respond_to? :join
-      @params = @params.join(' ')
-    end
-    p @params
-    returning(s = "") do
-      s << ':' + prefix + ' ' unless prefix.nil?
-      s << command
-      s << ' ' + @params unless @params.empty?
-      s << ' :' + text unless text.nil?
-    end
-  end
-
-  def self.decode(s)
-    s = "" if s == nil
-    puts 'Trying to decode: ' + s
-    if s =~ /^(?:[:@](\S+) )?(\S+)(?: ((?:[^:\s]\S* ?)*))?(?: (.*))?$/
-      prefix, cmd, @params, text = $1, $2, $3, $4
-      prefix = nil if prefix.nil?
-      text = nil if text.nil?
-      new(prefix, cmd, @params, text)
-    else
-      nil
-    end
-  end
-end
-
-class IRCServerConnection < EM::Connection
+class BackendConnection < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
@@ -86,18 +51,6 @@ class IRCServerConnection < EM::Connection
     send_data(s + "\n")
   end
 
-  def join_channel(channel)
-    send_command(nil, "JOIN", channel)
-  end
-
-  def part_channel(channel)
-    send_command(nil, "PART", channel)
-  end
-
-  def send_message(receiver, message)
-    send_command(nil, "PRIVMSG", receiver, message)
-  end
-  
   def receive_line(line)
     message = IRCMessage.decode(line)
     p message
@@ -114,7 +67,7 @@ class IRCServerConnection < EM::Connection
   end
 end
 
-EM.run{
+EM.run {
   channel = EM::Channel.new
 
   EM.start_server "0.0.0.0", 8080, MyHttpServer
@@ -129,7 +82,7 @@ EM.run{
     ws.onerror   { |e| puts "Error: #{e.message}" }
   end
 
-  EM.connect("irc.freenode.net", 6667, IRCServerConnection, :nick => "kokokaka", :host => "irc.freenode.net", :port => 6667, :channel => channel)
+  EM.connect("localhost", 1338, BackendConnection)
 }
 
 

@@ -68,7 +68,7 @@ class Backend
   end
 end
 
-class BackendConnection < EM::Connection
+class RelayConnection < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
@@ -129,7 +129,7 @@ EM.run {
   database = LogDatabase.new
   backend = Backend.new(:channel => channel, :database => database)
 
-  EM.start_server("0.0.0.0", 8080, BackendConnection,
+  EM.start_server("0.0.0.0", 1338, RelayConnection,
                   :backend => backend,
                   :channel => channel)
 }
