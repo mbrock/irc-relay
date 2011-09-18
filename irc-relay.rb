@@ -9,6 +9,7 @@ def returning(x)
   yield; x
 end
 
+# The web server. Puts index.html on port 8080
 class MyHttpServer < EM::Connection
   include EM::HttpServer
 
@@ -26,6 +27,7 @@ class MyHttpServer < EM::Connection
   end
 end
 
+# The Backend Connection
 class BackendConnection < EM::Connection
   include EM::Protocols::LineText2
 
@@ -77,11 +79,15 @@ class RelayServer < EM::Connection
 end
 
 EM.run {
+  # Create channels
   messages_to_client = EM::Channel.new
   messages_to_backend = EM::Channel.new
 
+  # Start the webserver
   EM.start_server '0.0.0.0', 8080, MyHttpServer
 
+  # Start the web socket.
+  ### TODO: Refactor this
   EM::WebSocket.start(:host => "0.0.0.0",
                       :port => 1337,
                       :debug => true) do |ws|
@@ -94,9 +100,12 @@ EM.run {
     ws.onerror   { |e| puts "Error: #{e.message}" }
   end
 
+  # Connect to the backend
   EM.connect("localhost", 1338, BackendConnection,
              :messages_to_backend => messages_to_backend,
              :messages_to_client  => messages_to_client)
+
+  # Start the server with a RelayServer object
   EM.start_server('0.0.0.0', 1339, RelayServer,
                   :messages_to_backend => messages_to_backend,
                   :messages_to_client  => messages_to_client)
