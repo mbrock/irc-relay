@@ -68,7 +68,7 @@ class BackendConnection < EM::Connection
   end
 end
 
-class WebSocketClientConnection
+class WebSocketClientConnections
   def initialize(args)
     @host, @port, @debug = args[:host], args[:port], args[:debug]
     @messages_to_backend = args[:messages_to_backend]
@@ -76,7 +76,6 @@ class WebSocketClientConnection
   end
 
   def start()
-    puts("start from websocketclientconnection")
     EM::WebSocket.start(:host  => @host,
                         :port  => @port,
                         :debug => @debug) do |ws|
@@ -102,6 +101,7 @@ class SocketClientConnection < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
+    puts("Initialized a SocketClientConnection")
     @messages_to_backend = args[:messages_to_backend]
     @messages_to_client = args[:messages_to_client]
     subscribe_to_client_messages
@@ -115,7 +115,7 @@ class SocketClientConnection < EM::Connection
   end
 
   def receive_line(line)
-    puts "relay_server got: #{line}"
+    puts "SocketClientConnection got: #{line}"
     @messages_to_backend.push(line)
   end
 end
@@ -129,7 +129,7 @@ EM.run {
   EM.start_server '0.0.0.0', 8080, MyHttpServer
 
   # Start web the socket.
-  WebSocketClientConnection.new(:host                => '0.0.0.0', 
+  WebSocketClientConnections.new(:host                => '0.0.0.0', 
                                 :port                => 1337, 
                                 :debug               => true,
                                 :messages_to_backend => messages_to_backend,

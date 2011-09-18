@@ -10,5 +10,8 @@ main = withSocketsDo $ do
     [addr,port] <- getArgs
     h <- connectTo addr (PortNumber (fromIntegral (read port)))
     hSetBuffering h LineBuffering
-    forever $ putStrLn =<< hGetLine h 
-
+    out <- hGetContents h
+    hPutStrLn h "hej"
+    putStr out
+--    forever $ do 
+--      putStrLn =<< hGetLine h 

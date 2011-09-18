@@ -76,6 +76,7 @@ class Backend
                                          :hostname => hostname)
   end
 
+  # Recieve a message from an IRC server
   def receive_message(server_name, message)
     message_no = @database.log!(server_name, message)
     @channel.push({ :message_no  => message_no,
@@ -83,6 +84,7 @@ class Backend
                     :message     => message.to_hash })
   end
 
+  # Send to an IRC Server
   def send(server_name, message)
     prefix  = message['prefix']
     command = message['command']
@@ -110,16 +112,17 @@ class RelayConnection < EM::Connection
 
   def receive_line(line)
     puts "backend got: #{line}"
-    message = JSON.load(line)
-    #connect {"command":"connect","hostname":"irc.freenode.net","port":6667}
-    #user    {"command":"send","server":"irc.freenode.net","message":{"command":"USER","params":["mamaoeu","mamaoeu",0,0],"text":"mamaoeu"}}
-    #nick    {"command":"send","server":"irc.freenode.net","message":{"command":"NICK","params":"mamaoeu"}}
-    #privmsg {"command":"send","server":"irc.freenode.net","message":{"command":"PRIVMSG","text":"hej?","params":["oaeuth"]}}
+    begin
+      message = JSON.load(line)
+    rescue
+      puts("Could not parse JSON on line!")
+      return
+    end
     case message['command']
     when 'connect'
       @backend.connect message['hostname'], message['port']
     when 'send'
-      @backend.send message['server'], message['message']
+      @backend.send message['server'], message['message']      
     end
   end
 end
@@ -144,7 +147,7 @@ class IRCServerConnection < EM::Connection
 
   def send_message(prefix, command, params, text = nil)
     s = IRCMessage.new(prefix, command, params, text)
-    puts "Sending to #{server_name}: #{s}"
+    puts "Sending to #{server_name}: #{s.to_hash}"
     send_data(s.encode + "\n")
   end
 
