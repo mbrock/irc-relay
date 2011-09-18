@@ -30,10 +30,10 @@ class IRCMessage
   def self.decode(s)
     s = "" if s == nil
     if s =~ /^(?:[:@](\S+) )?(\S+)(?: ((?:[^:\s]\S* ?)*))?(?: :?(.*))?$/
-      prefix, cmd, @params, text = $1, $2, $3, $4
+      prefix, cmd, params, text = $1, $2, $3, $4
       prefix = nil if prefix.nil?
       text = nil if text.nil?
-      new(prefix, cmd, @params, text)
+      new(prefix, cmd, params, text)
     else
       nil
     end
