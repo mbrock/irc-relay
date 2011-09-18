@@ -1,102 +1,98 @@
-# -*- coding: utf-8 -*-
-require 'gserver'
 
-Thread.abort_on_exception = true
+require 'rubygems'
+require 'eventmachine'
+require 'evma_httpserver'
+require 'em-websocket'
+require 'json'
+
+require 'em-ruby-irc'
 
 def returning(x)
   yield; x
 end
 
-class IRCMessage
-  attr_accessor :prefix, :command, :params, :text
+class MyHttpServer < EM::Connection
+  include EM::HttpServer
 
-  def initialize(prefix, command, params, text)
-    @prefix, @command, @params, @text = prefix, command, params, text
+  def post_init
+    super
+    no_environment_strings
   end
   
-  def encode
-    p [command, @params]
-    if @params.respond_to? :join
-      puts 'wat?'
-      @params = @params.join(' ')
-    end
-    p @params
-    returning(s = "") do
-      s << ':' + prefix + ' ' unless prefix.nil?
-      s << command
-      s << ' ' + @params unless @params.empty?
-      s << ' :' + text unless text.nil?
-    end
-  end
-
-  def self.decode(s)
-    puts 'Trying to decode: ' + s
-    if s =~ /^(?:[:@](\S+) )?(\S+)(?: ((?:[^:\s]\S* ?)*))?(?:(?:.*))?$/
-      prefix, cmd, @params, text = $1, $2, $3, $4
-      prefix = nil if prefix.nil?
-      text = nil if text.nil?
-      puts 'hmm'
-      new(prefix, cmd, @params, text)
-    else
-      puts 'UH OH'
-    end
+  def process_http_request
+    response = EM::DelegatedHttpResponse.new(self)
+    response.status = 200
+    response.content_type 'text/html'
+    response.content = File.read "index.html"
+    response.send_response
   end
 end
 
-class IRCServerConnection
-  def initialize(hostname, port, nickname, username, realname)
-    Thread.new do
-      @socket = TCPSocket.new(hostname, port)
-      puts "connected to #{hostname}"
-      send_command(nil, 'USER', [username, realname, '0', '0'], realname)
-      send_command(nil, 'NICK', nickname)
-      loop do
-        handle(@socket.gets)
-      end
-    end
-  end
+class BackendConnection < EM::Connection
+  include EM::Protocols::LineText2
 
-  def send_command(prefix, command, params, text = nil)
-    s = IRCMessage.new(prefix, command, params, text).encode
-    puts s
-    @socket.puts s
+  def initialize(args)
+    @channel = args[:relay_channel]
+    args[:backend_channel].subscribe do |message|
+      puts "backend_connection got: #{message}"
+      send_data(message + "\n")
+    end
+    super
   end
   
-  def handle(line)
-    p IRCMessage.decode(line)
-  end
-end
-
-class IRCRelayUser
-  def initialize(username)
-    @connections = []
+  def connection_completed
+    puts "connected to the backend"
   end
 
-  def connect(hostname, port, nickname, username, realname)
-    @connections << IRCServerConnection.new(hostname, port,
-                                            nickname, username, realname)
-  end
-end
-
-class IRCRelayServer < GServer
-  def initialize(port=4002)
-    super(port, 0)
-  end
-
-  def serve(io)
-    name = io.gets.gsub(/\n/, "")
-    @user = IRCRelayUser.new(name)
-    if io.gets =~ /^c (.*) (.*)$/
-      @user.connect $1, $2, name, name, name
+  def receive_line(line)
+    puts line
+    msg = JSON.load(line)
+    message = msg['message']
+    if message == nil
+      nil
     else
-      io.puts "WTF?"
+      @channel.push(message)
     end
-    io.puts "Välkommen till IRC Relay Server!"
-    io.puts "Hoppas du trivs."
   end
 end
 
-relay_server = IRCRelayServer.new
-relay_server.audit = true
-relay_server.debug = true
-relay_server.start.join
+class RelayServer < EM::Connection
+  include EM::Protocols::LineText2
+
+  def initialize(args)
+    @backend_channel = args[:backend_channel]
+
+    args[:relay_channel].subscribe do |message|
+      send_data(JSON.generate(message) + "\n")
+    end
+    super
+  end
+
+  def receive_line(line)
+    puts "relay_server got: #{line}"
+    @backend_channel.push(line)
+  end
+end
+
+EM.run {
+  channel = EM::Channel.new
+  backend_channel = EM::Channel.new
+
+  EM.start_server '0.0.0.0', 8080, MyHttpServer
+
+  EM::WebSocket.start(:host => "0.0.0.0", :port => 1337, :debug => true) do |ws|
+    ws.onopen {
+      channel.subscribe { |msg| ws.send(msg) }
+    }
+    ws.onmessage { |msg| channel.push(msg) }
+    ws.onclose   { puts "WebSocket closed" }
+    ws.onerror   { |e| puts "Error: #{e.message}" }
+  end
+
+  EM.connect("localhost", 1338, BackendConnection,
+             :backend_channel => backend_channel,
+             :relay_channel   => channel)
+  EM.start_server('0.0.0.0', 1339, RelayServer,
+                  :backend_channel => backend_channel,
+                  :relay_channel   => channel)
+}
