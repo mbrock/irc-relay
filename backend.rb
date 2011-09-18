@@ -1,3 +1,4 @@
+
 require 'rubygems'
 require 'json'
 require 'eventmachine'
@@ -15,11 +16,9 @@ class IRCMessage
   end
   
   def encode
-    p [command, @params]
     if @params.respond_to? :join
       @params = @params.join(' ')
     end
-    p @params
     returning(s = "") do
       s << ':' + prefix + ' ' unless prefix.nil?
       s << command
@@ -52,12 +51,14 @@ class Backend
   def initialize(args)
     @channel = args[:channel]
     @database = args[:database]
+
+    @connections = {}
   end
 
   def connect(hostname, port)
-    EM::connect(hostname, port, IRCServerConnection,
-                :backend  => self,
-                :hostname => hostname)
+    @connections[hostname] = EM::connect(hostname, port, IRCServerConnection,
+                                         :backend  => self,
+                                         :hostname => hostname)
   end
 
   def receive_message(server_name, message)
@@ -66,27 +67,41 @@ class Backend
                     :server_name => server_name,
                     :message     => message.to_hash })
   end
+
+  def send(server_name, message)
+    prefix  = message['prefix']
+    command = message['command']
+    params  = message['params']
+    text    = message['text']
+    @connections[server_name].send_message(prefix, command, params, text)
+  end
 end
 
 class RelayConnection < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
+    puts "Initializing relay_connection."
     @backend = args[:backend]
-    
+
     args[:channel].subscribe do |message|
       send_data(JSON.generate(message) + "\n")
-      super
     end
+    super
+  end
 
-    def receive_line(line)
-      message = JSON.load(line)
-      case message['command']
-      when 'connect'
-        @backend.connect message['hostname'], message['port']
-      when 'send'
-        @backend.send message['server'], message['message']
-      end
+  def receive_line(line)
+    puts "backend got: #{line}"
+    message = JSON.load(line)
+    #connect {"command":"connect","hostname":"irc.freenode.net","port":6667}
+    #user    {"command":"send","server":"irc.freenode.net","message":{"command":"USER","params":["mamaoeu","mamaoeu",0,0],"text":"mamaoeu"}}
+    #nick    {"command":"send","server":"irc.freenode.net","message":{"command":"NICK","params":"mamaoeu"}}
+    #privmsg {"command":"send","server":"irc.freenode.net","message":{"command":"PRIVMSG","text":"hej?","params":["oaeuth"]}}
+    case message['command']
+    when 'connect'
+      @backend.connect message['hostname'], message['port']
+    when 'send'
+      @backend.send message['server'], message['message']
     end
   end
 end
@@ -107,7 +122,7 @@ class IRCServerConnection < EM::Connection
   end
 
   def send_message(prefix, command, params, text = nil)
-    s = IRCMessage.new(prefix, command, params, text).encode
+    s = IRCMessage.new(prefix, command, params, text)
     puts "Sending to #{server_name}: #{s}"
     send_data(s.encode + "\n")
   end
