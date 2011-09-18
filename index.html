@@ -14,7 +14,11 @@ var ws = null;
 function outputMessage(string) {
     $("#messages").append("<div>"+string+"</div>");
 }
-
+function stringToJSON(string){
+  splitString = string.match("/(\w+)\s(.*)");
+  alert(splitString);
+  return splitString[0];
+}
 // Init websocker server on page load.
 $(document).ready( function() {
     // Starts the socket
@@ -41,6 +45,7 @@ $(document).ready( function() {
 });
 $("#input_form").submit(function() {
     // Send the text from the input field on the webserver
+//    var msg = stringToJSON($("#input").val());
     var msg = $("#input").val();
     var command = {"command":"send",
                    "server":"irc.freenode.net",
@@ -57,13 +62,14 @@ $("#input_form").submit(function() {
     return false;
 });
 </script>
-    <style>
+<style>
       .input {
       position:fixed;
       bottom:10;
       left:10;
       }
-    </style>
+</style>
+
   </head>
   <body>
     <!-- Here goes the messages -->
