@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!-- Work in progress, IRC Relay web client interface, (c) 2011 Dan Rosén -->
 <html>
   <head>
@@ -5,73 +6,23 @@
     <!-- Load JQuery and JQuery-ui libraries -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
-
-    <script>
-      // The websocket server. 
-      var ws = null;
-
-      // Init websocker server on page load.
-      function init() {
-
-        // Outputs the message in the message div
-        function outputMessage(string) {
-          var element = document.getElementById("messages");
-          var p = document.createElement("p");
-          p.innerHTML += string;
-          element.appendChild(p);
-        }
-
-        // Starts the socket
-        var Socket = "MozWebSocket" in window ? MozWebSocket : WebSocket;
-        ws = new Socket("ws://localhost:1337/");
-    
-        // The callbacks
-        ws.onmessage = function(evt) { outputMessage("Message: " + evt.data); };
-        ws.onclose = function() { outputMessage("socket closed"); };
-        ws.onopen = function() {
-          outputMessage("connected...");
-          ws.send("hello server");
-          ws.send("hello again");
-        };
-      };
-
-    </script>
-
-    // Style for the input box, fixed at the bottom of the page
-    <style>
-      .bottom-input {
+    <script src="webclient.js"></script>
+ <style>
+      .input {
         position:fixed;
         bottom:10;
         left:10;
       }
     </style>
   </head>
-  <body onload="init();">
+  <body>
     <!-- Here goes the messages -->
     <div id="messages"></div>
-
     <!-- Input form of messages -->
-    <div class="bottom-input">
-      <form>
-        <input type="text" name="sendtext" size="25" />
-        <input type="submit" name="submitbutton" value="Go!" />
+    <div class="input">
+      <form id="input_form">
+        <input type="text" id="input" size="100%" />
       </form>
     </div>
-
-    <!-- Handler when submitting messages from the form -->
-    <script>
-      $("form").submit(function() {
-
-          // Send the text from the input field on the webserver
-          var msg = $("input:first").val();
-          ws.send(msg);
-            
-          // Clear the field
-          $("input:first").val("");
-
-          // Return false so the webpage does not reload because of form submit
-          return false;
-      });
-    </script>
   </body>
 </html>
