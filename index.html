@@ -32,8 +32,8 @@ $(document).ready( function() {
         data = JSON.parse(evt.data);
         if(data.command == "connect"){
             outputMessage("Connecting to " + data.hostname + ":" + data.port);
-        }else if(data.command == "send"){
-            outputMessage("<< " + data.message.command + " " + data.message.params);
+        }else {
+            outputMessage(evt.data);
         }
     };
     ws.onclose = function() { outputMessage("Socket closed"); };
@@ -44,17 +44,17 @@ $(document).ready( function() {
                                 message:{command:"USER", params:["mamaoeu","mamaoeu",0,0], text:"mamaoeu"}}));
 
     }
-});
-$("#input_form").submit(function() {
-    // Send the text from the input field on the webserver
-    // var msg = stringToJSON($("#input_text").val());
+    
+    // 
+    $("#input_form").submit(function() {
+      // Send the text from the input field on the webserver
+      // var msg = stringToJSON($("#input_text").val());
     var msg = $("#input_text").val();
     var command = {"command":"send",
                    "server":"irc.freenode.net",
                    "message":{"command":"PRIVMSG",
                               "text":msg,
-                              "params":["salkin"]}
-                  }
+                              "params":["salkin"]}}
     ws.send(JSON.stringify(command));
     
     // Clear the field
@@ -62,6 +62,8 @@ $("#input_form").submit(function() {
 
     // Return false so the webpage does not reload because of form submit
     return false;
+  });
+
 });
 </script>
 <style>
@@ -72,7 +74,8 @@ $("#input_form").submit(function() {
   .input {
     position:fixed;
     bottom:10px;
-    left:10px;
+     width:98%;
+    
   }
 </style>
 
@@ -84,7 +87,7 @@ $("#input_form").submit(function() {
     <!-- Input form of messages -->
     <div class="input">
       <form id="input_form">
-        <input type="text" id="input_text" size="100" />
+        <input type="text" id="input_text" class="input" />
       </form>
     </div>
   </body>
