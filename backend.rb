@@ -1,13 +1,21 @@
 
+# Backend is connected to IRC
+# Backend logs, talks to the Relay with RelayConnection on 1338
+
+
 require 'rubygems'
 require 'json'
 require 'eventmachine'
-require 'log-database'
+
+require_relative 'log-database'
 
 def returning(x)
   yield; x
 end
 
+# A low-level message from/to the IRC server
+# IRC RFC: http://www.irchelp.org/irchelp/rfc/rfc.html
+# More specific on messages: http://www.irchelp.org/irchelp/rfc/chapter4.html
 class IRCMessage
   attr_accessor :prefix, :command, :params, :text
 
@@ -16,6 +24,7 @@ class IRCMessage
   end
   
   def encode
+    # If @params is an array, concat it
     if @params.respond_to? :join
       @params = @params.join(' ')
     end
@@ -47,11 +56,16 @@ class IRCMessage
   end
 end
 
+# Keeps track of the connections to IRC servers
 class Backend
   def initialize(args)
+    # The event machine channel
     @channel = args[:channel]
+
+    # The logging database
     @database = args[:database]
 
+    # Hash of connections to IRC servers
     @connections = {}
   end
 
@@ -73,10 +87,13 @@ class Backend
     command = message['command']
     params  = message['params']
     text    = message['text']
+    # Send the message on the IRCServerConnection
     @connections[server_name].send_message(prefix, command, params, text)
   end
 end
 
+# When someone connects to the backend port, a RelayConnection is created,
+# and forwards messages to the backend
 class RelayConnection < EM::Connection
   include EM::Protocols::LineText2
 
@@ -106,6 +123,9 @@ class RelayConnection < EM::Connection
   end
 end
 
+# An IRC Server Connection ;)
+# When a message is received, it is to the Backend, and then
+# the Backend puts it on the RelayConnection channel.
 class IRCServerConnection < EM::Connection
   include EM::Protocols::LineText2
 
@@ -139,6 +159,7 @@ class IRCServerConnection < EM::Connection
   end
 end
 
+# Run the Event Machine when started.
 EM.run {
   channel = EM::Channel.new
   database = LogDatabase.new
