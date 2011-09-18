@@ -3,11 +3,16 @@
 <html>
   <head>
     <title>Excel IRC Relay</title>
+    <link type="text/css" href="jquery-ui/css/swanky-purse/jquery-ui-1.8.16.custom.css" rel="Stylesheet" />
     <!-- Load JQuery and JQuery-ui libraries -->
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.min.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+    <script src="jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
     <script src="client.js"></script>
 <style>
+  body {
+    font-size: 60%;
+  }
+
   .line {
     font-family: mono;
     font-size: 12px;
@@ -15,14 +20,36 @@
   .input {
     position:fixed;
     bottom:10px;
-     width:98%;
-    
+    width:98%;
   }
+  #toolbar {
+    position: fixed;
+    top: 10px;
+    width: 98%;
+  }
+
+  fieldset { padding:0; border:0; margin-top:25px; }
+  label, input { display:block; }
+  input.text { margin-bottom:12px; width:95%; padding: .4em; }
 </style>
 
   </head>
 
   <body>
+    <!-- Here are buttons -->
+    <div id="toolbar">
+      <div id="connect-form" title="Connect">
+        <form>
+          <fieldset>
+            <label for="hostname">Hostname</label>
+            <input type="text" name="hostname"
+                   id="connect-form-hostname"
+                   class="text ui-widget-content ui-corner-all" />
+          </fieldset>
+        </form>
+      </div>
+      <button id="connect-button">Connect</button>
+    </div>
     <!-- Here goes the messages -->
     <div id="messages"></div>
     <!-- Input form of messages -->

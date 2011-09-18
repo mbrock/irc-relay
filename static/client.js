@@ -40,19 +40,34 @@ $(document).ready( function() {
     $("#input_form").submit(function() {
       // Send the text from the input field on the webserver
       // var msg = stringToJSON($("#input_text").val());
-    var msg = $("#input_text").val();
-    var command = {"command":"send",
-                   "server":"irc.freenode.net",
-                   "message":{"command":"PRIVMSG",
-                              "text":msg,
-                              "params":["salkin"]}}
-    ws.send(JSON.stringify(command));
-    
-    // Clear the field
-    $("#input_text").val("");
+      var msg = $("#input_text").val();
+      var command = {"command":"send",
+                     "server":"irc.freenode.net",
+                     "message":{"command":"PRIVMSG",
+                                "text":msg,
+                                "params":["salkin"]}}
+      ws.send(JSON.stringify(command));
+      
+      // Clear the field
+      $("#input_text").val("");
+  
+      // Return false so the webpage does not reload because of form submit
+      return false;
+    });
 
-    // Return false so the webpage does not reload because of form submit
-    return false;
-  });
-
+    $('#connect-button').button();    
+    $('#connect-form')
+        .dialog({ autoOpen: false,
+                  title: 'Connect',
+                  modal: true,
+                  buttons: {
+                      "Connect": function () {
+                          $(this).dialog('close');
+                      },
+                      Cancel: function () { $(this).dialog('close'); }
+                  } });
+    $('#connect-button').click(function() {
+        $('#connect-form').dialog('open');
+        return false;
+    });
 });
