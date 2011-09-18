@@ -54,7 +54,7 @@ class BackendConnection < EM::Connection
   def initialize(args)
     @channel = args[:messages_to_client]
     args[:messages_to_backend].subscribe do |message|
-      puts "backend_connection got: #{message}"
+      puts "backendconnection sending to backend: #{message}"
       send_data(message + "\n")
     end
     super

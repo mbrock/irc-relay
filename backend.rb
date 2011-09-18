@@ -31,8 +31,8 @@ class IRCMessage
     end
     returning(s = "") do
       s << ':' + prefix + ' ' unless prefix.nil?
-      s << command
-      s << ' ' + @params unless @params.empty?
+      s << command.upcase
+      s << ' ' + @params unless @params.nil? || @params.empty?
       s << ' :' + text unless text.nil?
     end
   end
@@ -111,7 +111,7 @@ class RelayConnection < EM::Connection
   end
 
   def receive_line(line)
-    puts "backend got: #{line}"
+#    puts "backend got: #{line}"
     begin
       message = JSON.load(line)
     rescue
@@ -121,6 +121,7 @@ class RelayConnection < EM::Connection
     case message['command']
     when 'connect'
       @backend.connect message['hostname'], message['port']
+    # Add more cases for nick, join, user, and whatever
     when 'send'
       @backend.send message['server'], message['message']      
     end
@@ -147,7 +148,7 @@ class IRCServerConnection < EM::Connection
 
   def send_message(prefix, command, params, text = nil)
     s = IRCMessage.new(prefix, command, params, text)
-    puts "Sending to #{server_name}: #{s.to_hash}"
+    puts "Sending to #{server_name}: #{s.encode}"
     send_data(s.encode + "\n")
   end
 
