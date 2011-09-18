@@ -1,3 +1,4 @@
+# A prototype of a logger!
 class LogDatabase
   def log!(server_name, message)
     @message_no ||= 0
