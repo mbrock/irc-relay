@@ -32,8 +32,8 @@ class BackendConnection < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
-    @channel = args[:channel_to_relay]
-    args[:channel_to_backend].subscribe do |message|
+    @channel = args[:messages_to_client]
+    args[:messages_to_backend].subscribe do |message|
       puts "backend_connection got: #{message}"
       send_data(message + "\n")
     end
@@ -60,9 +60,9 @@ class RelayServer < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
-    @channel_to_backend = args[:channel_to_backend]
+    @messages_to_backend = args[:messages_to_backend]
 
-    args[:channel_to_relay].subscribe do |message|
+    args[:messages_to_client].subscribe do |message|
       send_data(JSON.generate(message) + "\n")
     end
     super
@@ -70,29 +70,29 @@ class RelayServer < EM::Connection
 
   def receive_line(line)
     puts "relay_server got: #{line}"
-    @channel_to_backend.push(line)
+    @messages_to_backend.push(line)
   end
 end
 
 EM.run {
-  channel_to_relay = EM::Channel.new
-  channel_to_backend = EM::Channel.new
+  messages_to_client = EM::Channel.new
+  messages_to_backend = EM::Channel.new
 
   EM.start_server '0.0.0.0', 8080, MyHttpServer
 
   EM::WebSocket.start(:host => "0.0.0.0", :port => 1337, :debug => true) do |ws|
     ws.onopen {
-      channel.subscribe { |msg| ws.send(msg) }
+      messages_to_client.subscribe { |msg| ws.send(msg) }
     }
-    ws.onmessage { |msg| channel.push(msg) }
+    ws.onmessage { |msg| messages_to_client.push(msg) }
     ws.onclose   { puts "WebSocket closed" }
     ws.onerror   { |e| puts "Error: #{e.message}" }
   end
 
   EM.connect("localhost", 1338, BackendConnection,
-             :channel_to_backend => channel_to_backend,
-             :channel_to_relay   => channel_to_relay)
+             :messages_to_backend => messages_to_backend,
+             :messages_to_client  => messages_to_client)
   EM.start_server('0.0.0.0', 1339, RelayServer,
-                  :channel_to_backend => channel_to_backend,
-                  :channel_to_relay   => channel_to_relay)
+                  :messages_to_backend => messages_to_backend,
+                  :messages_to_client  => messages_to_client)
 }
