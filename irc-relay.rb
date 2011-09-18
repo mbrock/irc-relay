@@ -32,8 +32,8 @@ class BackendConnection < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
-    @channel = args[:relay_channel]
-    args[:backend_channel].subscribe do |message|
+    @channel = args[:channel_to_relay]
+    args[:channel_to_backend].subscribe do |message|
       puts "backend_connection got: #{message}"
       send_data(message + "\n")
     end
@@ -60,9 +60,9 @@ class RelayServer < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
-    @backend_channel = args[:backend_channel]
+    @channel_to_backend = args[:channel_to_backend]
 
-    args[:relay_channel].subscribe do |message|
+    args[:channel_to_relay].subscribe do |message|
       send_data(JSON.generate(message) + "\n")
     end
     super
@@ -70,13 +70,13 @@ class RelayServer < EM::Connection
 
   def receive_line(line)
     puts "relay_server got: #{line}"
-    @backend_channel.push(line)
+    @channel_to_backend.push(line)
   end
 end
 
 EM.run {
   channel = EM::Channel.new
-  backend_channel = EM::Channel.new
+  channel_to_backend = EM::Channel.new
 
   EM.start_server '0.0.0.0', 8080, MyHttpServer
 
@@ -90,9 +90,9 @@ EM.run {
   end
 
   EM.connect("localhost", 1338, BackendConnection,
-             :backend_channel => backend_channel,
-             :relay_channel   => channel)
+             :channel_to_backend => channel_to_backend,
+             :channel_to_relay   => channel)
   EM.start_server('0.0.0.0', 1339, RelayServer,
-                  :backend_channel => backend_channel,
-                  :relay_channel   => channel)
+                  :channel_to_backend => channel_to_backend,
+                  :channel_to_relay   => channel)
 }
