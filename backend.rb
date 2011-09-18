@@ -7,7 +7,8 @@ require 'rubygems'
 require 'json'
 require 'eventmachine'
 
-require_relative 'log-database'
+$LOAD_PATH << '.'
+require 'log-database'
 
 def returning(x)
   yield; x
