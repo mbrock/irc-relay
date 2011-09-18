@@ -13,7 +13,7 @@ end
 class MyHttpServer < EM::Connection
   include EM::HttpServer
 
-  @@allowed_requests = ['/index.html', '/client.js']
+  @@allowed_requests = ['/', '/client.js']
 
   def post_init
     super
@@ -23,9 +23,15 @@ class MyHttpServer < EM::Connection
   def process_http_request
     response = EM::DelegatedHttpResponse.new(self)
     if @@allowed_requests.include? @http_request_uri
+      if @http_request_uri == '/'
+        path = '/index.html'
+      elsif
+        path = @http_request_uri
+      end
+
       response.status = 200
       response.content_type 'text/html'
-      response.content = File.read(File.join('static', @http_request_uri))
+      response.content = File.read(File.join('static', path))
     else
       response.status = 404
     end

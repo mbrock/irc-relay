@@ -48,8 +48,6 @@ $(document).ready( function() {
                               "params":["salkin"]}}
     ws.send(JSON.stringify(command));
     
-    alert("hey");
-
     // Clear the field
     $("#input_text").val("");
 
