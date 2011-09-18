@@ -75,7 +75,7 @@ class RelayServer < EM::Connection
 end
 
 EM.run {
-  channel = EM::Channel.new
+  channel_to_relay = EM::Channel.new
   channel_to_backend = EM::Channel.new
 
   EM.start_server '0.0.0.0', 8080, MyHttpServer
@@ -91,8 +91,8 @@ EM.run {
 
   EM.connect("localhost", 1338, BackendConnection,
              :channel_to_backend => channel_to_backend,
-             :channel_to_relay   => channel)
+             :channel_to_relay   => channel_to_relay)
   EM.start_server('0.0.0.0', 1339, RelayServer,
                   :channel_to_backend => channel_to_backend,
-                  :channel_to_relay   => channel)
+                  :channel_to_relay   => channel_to_relay)
 }
