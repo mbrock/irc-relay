@@ -56,7 +56,37 @@ class BackendConnection < EM::Connection
   end
 end
 
-class RelayServer < EM::Connection
+class WebSocketClientConnection
+  def initialize(args)
+    @host, @port, @debug = args[:host], args[:port], args[:debug]
+    @messages_to_backend = args[:messages_to_backend]
+    @messages_to_client  = args[:messages_to_client]
+  end
+
+  def start()
+    puts("start from websocketclientconnection")
+    EM::WebSocket.start(:host  => @host,
+                        :port  => @port,
+                        :debug => @debug) do |ws|
+      ws.onopen do
+        puts("onopen")
+        @messages_to_client.subscribe do |msg| 
+          ws.send(JSON.generate(msg) + "\n")
+        end
+      end
+    
+      ws.onmessage do |msg| 
+        puts("onmessage " + msg)
+        @messages_to_backend.push(msg) 
+      end
+
+      ws.onclose   { puts "WebSocket closed" }
+      ws.onerror   { |e| puts "Error: #{e.message}" }
+    end
+  end
+end
+
+class SocketClientConnection < EM::Connection
   include EM::Protocols::LineText2
 
   def initialize(args)
@@ -86,19 +116,12 @@ EM.run {
   # Start the webserver
   EM.start_server '0.0.0.0', 8080, MyHttpServer
 
-  # Start the web socket.
-  ### TODO: Refactor this
-  EM::WebSocket.start(:host => "0.0.0.0",
-                      :port => 1337,
-                      :debug => true) do |ws|
-    ws.onopen do
-      messages_to_client.subscribe { |msg| ws.send(msg) }
-    end
-
-    ws.onmessage { |msg| messages_to_client.push(msg) }
-    ws.onclose   { puts "WebSocket closed" }
-    ws.onerror   { |e| puts "Error: #{e.message}" }
-  end
+  # Start web the socket.
+  WebSocketClientConnection.new(:host                => '0.0.0.0', 
+                                :port                => 1337, 
+                                :debug               => true,
+                                :messages_to_backend => messages_to_backend,
+                                :messages_to_client  => messages_to_client).start
 
   # Connect to the backend
   EM.connect("localhost", 1338, BackendConnection,
@@ -106,7 +129,7 @@ EM.run {
              :messages_to_client  => messages_to_client)
 
   # Start the server with a RelayServer object
-  EM.start_server('0.0.0.0', 1339, RelayServer,
+  EM.start_server('0.0.0.0', 1339, SocketClientConnection,
                   :messages_to_backend => messages_to_backend,
                   :messages_to_client  => messages_to_client)
 }
