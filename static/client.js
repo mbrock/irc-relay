@@ -1,6 +1,7 @@
 // The websocket server. 
 var ws = null;
 var username = "aoeuaoeu";
+var servername = "";
 
 // Outputs the message in the message div
 function outputMessage(string) {
@@ -11,17 +12,18 @@ function stringToCommand(string){
     if(string.charAt(0) == '/'){
         // Okay, this is a command
         if(matches = string.match("/connect\\s([\\w\\.]+)\\s(\\d+)")){
+          servername = matches[1];
           a = JSON.stringify({command:"connect", hostname: matches[1], port: matches[2]});
           b = JSON.stringify({command:"send", server:matches[1], message:{command:"USER", params:[username,username,0,0], text: username}});
-            c = JSON.stringify({command:"send", server:matches[1], message:{command:"NICK", params:[username]}};
+            c = JSON.stringify({command:"send", server:matches[1], message:{command:"NICK", params:[username]}});
           return a + "\n" + b + "\n" + c;
         }
-    }else{
+    }else if(matches = strign.match("/join\\s#?(\w+)")){
+        return JSON.stringify({"command":"send", "server":servername, "message":{"command":"JOIN", "params":["#"+matches[1]]}});
+    }
         // If not command then display as chat-line
         return JSON.stringify({"command":"send", "server":"irc.freenode.net", "message":{"command":"PRIVMSG", "text":msg, "params":["salkin"]}});
     }
-
-}
 
 // Init websocket server on page load.
 $(document).ready( function() {
