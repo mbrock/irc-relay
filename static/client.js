@@ -1,8 +1,8 @@
 // The websocket server. 
 var ws = null;
-var username = "aoeuaoeu";
-var servername = "";
-
+var username = "webbbottten";
+var servername = "irc.freenode.net";
+var channel = "#sholmtest";
 // Outputs the message in the message div
 function outputMessage(string) {
     $("#messages").append("<div class=\"line\">"+string+"</div>");
@@ -17,14 +17,14 @@ function stringToCommand(string){
           b = JSON.stringify({command:"send", server:matches[1], message:{command:"USER", params:[username,username,0,0], text: username}});
             c = JSON.stringify({command:"send", server:matches[1], message:{command:"NICK", params:[username]}});
           return a + "\n" + b + "\n" + c;
+        } else if(matches = string.match("/join\\s#?(\\w+)")){
+            channel = matches[1];
+            return JSON.stringify({command: "send", server: servername, message:{command:"JOIN", "params":["#"+matches[1]]}});
         }
-    }else if(matches = strign.match("/join\\s#?(\w+)")){
-        return JSON.stringify({"command":"send", "server":servername, "message":{"command":"JOIN", "params":["#"+matches[1]]}});
     }
-        // If not command then display as chat-line
-        return JSON.stringify({"command":"send", "server":"irc.freenode.net", "message":{"command":"PRIVMSG", "text":msg, "params":["salkin"]}});
-    }
-
+    // If not command then display as chat-line
+    return JSON.stringify({command:"send", server:servername, message:{command:"PRIVMSG", text:string, "params":[channel]}});
+}
 // Init websocket server on page load.
 $(document).ready( function() {
     // Starts the socket
@@ -34,17 +34,11 @@ $(document).ready( function() {
     // The callbacks
     ws.onmessage = function(evt) { 
         data = JSON.parse(evt.data);
-        if(data.command == "connect"){
-            outputMessage("Connecting to " + data.hostname + ":" + data.port);
-        }else {
-            outputMessage(evt.data);
-        }
+        outputMessage(data.text);
     };
     ws.onclose = function() { outputMessage("Socket closed"); };
     ws.onopen = function() {
         outputMessage("Connected to backend.");
-        
-
     }
     
     // 
