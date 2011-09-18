@@ -9,7 +9,13 @@
     <script src="jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
     <script src="client.js"></script>
 <style>
+  html {
+    padding: 0;
+    margin: 0;
+  }
+
   body {
+    padding: 0; margin: 0; border: 0 !important;
     font-size: 60%;
   }
 
@@ -19,13 +25,22 @@
   }
   .input {
     position:fixed;
-    bottom:10px;
+    bottom:0px;
+    margin-left: auto;
+    margin-right: auto;
     width:98%;
+    font-size: 20px;
   }
   #toolbar {
     position: fixed;
-    top: 10px;
+    top: 0px;
     width: 98%;
+    background: green;
+    height: 30px;
+  }
+
+  #messages {
+    margin-top: 35px;
   }
 
   fieldset { padding:0; border:0; margin-top:25px; }
@@ -35,7 +50,7 @@
 
   </head>
 
-  <body>
+  <body class="ui-widget-content">
     <!-- Here are buttons -->
     <div id="toolbar">
       <div id="connect-form" title="Connect">
@@ -55,7 +70,7 @@
     <!-- Input form of messages -->
     <div class="input">
       <form id="input_form">
-        <input type="text" id="input_text" class="input" />
+        <input type="text" id="input_text" class="input ui-widget-content" />
       </form>
     </div>
   </body>
