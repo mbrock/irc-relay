@@ -5,8 +5,6 @@ require 'evma_httpserver'
 require 'em-websocket'
 require 'json'
 
-require 'em-ruby-irc'
-
 def returning(x)
   yield; x
 end
@@ -61,11 +59,15 @@ class RelayServer < EM::Connection
 
   def initialize(args)
     @messages_to_backend = args[:messages_to_backend]
+    @messages_to_client = args[:messages_to_client]
+    subscribe_to_client_messages
+    super
+  end
 
-    args[:messages_to_client].subscribe do |message|
+  def subscribe_to_client_messages
+    @messages_to_client.subscribe do |message|
       send_data(JSON.generate(message) + "\n")
     end
-    super
   end
 
   def receive_line(line)
@@ -80,10 +82,13 @@ EM.run {
 
   EM.start_server '0.0.0.0', 8080, MyHttpServer
 
-  EM::WebSocket.start(:host => "0.0.0.0", :port => 1337, :debug => true) do |ws|
-    ws.onopen {
+  EM::WebSocket.start(:host => "0.0.0.0",
+                      :port => 1337,
+                      :debug => true) do |ws|
+    ws.onopen do
       messages_to_client.subscribe { |msg| ws.send(msg) }
-    }
+    end
+
     ws.onmessage { |msg| messages_to_client.push(msg) }
     ws.onclose   { puts "WebSocket closed" }
     ws.onerror   { |e| puts "Error: #{e.message}" }
