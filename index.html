@@ -12,7 +12,13 @@ var ws = null;
 
 // Outputs the message in the message div
 function outputMessage(string) {
-    $("#messages").append("<div>"+string+"</div>");
+    $("#messages").append("<div class=\"line\">"+string+"</div>");
+}
+
+function stringToJSON(string){
+  splitString = string.match("/(\w+)\s(.*)");
+  alert(splitString);
+  return splitString[0];
 }
 
 // Init websocket server on page load.
@@ -41,7 +47,8 @@ $(document).ready( function() {
 });
 $("#input_form").submit(function() {
     // Send the text from the input field on the webserver
-    var msg = $("#input").val();
+    // var msg = stringToJSON($("#input_text").val());
+    var msg = $("#input_text").val();
     var command = {"command":"send",
                    "server":"irc.freenode.net",
                    "message":{"command":"PRIVMSG",
@@ -51,27 +58,33 @@ $("#input_form").submit(function() {
     ws.send(JSON.stringify(command));
     
     // Clear the field
-    $("#input").val("");
+    $("#input_text").val("");
 
     // Return false so the webpage does not reload because of form submit
     return false;
 });
 </script>
-    <style>
-      .input {
-      position:fixed;
-      bottom:10;
-      left:10;
-      }
-    </style>
+<style>
+  .line {
+    font-family: mono;
+    font-size: 12px;
+  }
+  .input {
+    position:fixed;
+    bottom:10px;
+    left:10px;
+  }
+</style>
+
   </head>
+
   <body>
     <!-- Here goes the messages -->
     <div id="messages"></div>
     <!-- Input form of messages -->
     <div class="input">
       <form id="input_form">
-        <input type="text" id="input" size="100%" />
+        <input type="text" id="input_text" size="100" />
       </form>
     </div>
   </body>
