@@ -13,8 +13,6 @@ end
 class MyHttpServer < EM::Connection
   include EM::HttpServer
 
-  @@allowed_requests = ['/', '/client.js']
-
   def post_init
     super
     no_environment_strings
@@ -22,7 +20,8 @@ class MyHttpServer < EM::Connection
   
   def process_http_request
     response = EM::DelegatedHttpResponse.new(self)
-    if @@allowed_requests.include? @http_request_uri
+    ## TODO: make this safe
+    if true # @@allowed_requests.include? @http_request_uri
       if @http_request_uri == '/'
         path = '/index.html'
       elsif
@@ -30,7 +29,16 @@ class MyHttpServer < EM::Connection
       end
 
       response.status = 200
-      response.content_type 'text/html'
+      case path
+      when /\.html$/
+        response.content_type 'text/html'
+      when /\.css$/
+        response.content_type 'text/css'
+      when /\.js$/
+        response.content_type 'text/javascript'
+      else
+        response.content_type 'text/plain'
+      end
       response.content = File.read(File.join('static', path))
     else
       response.status = 404

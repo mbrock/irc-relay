@@ -1,6 +1,6 @@
 // The websocket server. 
 var ws = null;
-var username = null;
+var username = "aoeuaoeu";
 
 // Outputs the message in the message div
 function outputMessage(string) {
@@ -11,7 +11,10 @@ function stringToCommand(string){
     if(string.charAt(0) == '/'){
         // Okay, this is a command
         if(matches = string.match("/connect\\s([\\w\\.]+)\\s(\\d+)")){
-            return JSON.stringify({command:"connect", hostname: matches[1], port: matches[2]});
+          a = JSON.stringify({command:"connect", hostname: matches[1], port: matches[2]});
+          b = JSON.stringify({command:"send", server:matches[1], message:{command:"USER", params:[username,username,0,0], text: username}});
+            c = JSON.stringify({command:"send", server:matches[1], message:{command:"NICK", params:[username]}};
+          return a + "\n" + b + "\n" + c;
         }
     }else{
         // If not command then display as chat-line
@@ -39,8 +42,6 @@ $(document).ready( function() {
     ws.onopen = function() {
         outputMessage("Connected to backend.");
         
-//        ws.send(JSON.stringify({command:"send", server:"irc.freenode.net", 
-//                                message:{command:"USER", params:["mamaoeu","mamaoeu",0,0], text:"mamaoeu"}}));
 
     }
     
@@ -60,5 +61,19 @@ $(document).ready( function() {
     // Return false so the webpage does not reload because of form submit
     return false;
   });
-
+    $('#connect-button').button();    
+    $('#connect-form')
+        .dialog({ autoOpen: false,
+                  title: 'Connect',
+                  modal: true,
+                  buttons: {
+                      "Connect": function () {
+                          $(this).dialog('close');
+                      },
+                      Cancel: function () { $(this).dialog('close'); }
+                  } });
+    $('#connect-button').click(function() {
+        $('#connect-form').dialog('open');
+        return false;
+    });
 });
