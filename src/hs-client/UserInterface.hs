@@ -1,19 +1,24 @@
+-- Based on vty-ui's example ListTest
 {-# LANGUAGE RecordWildCards #-}
-module Main where
+module UserInterface where
 
 import System.Exit ( exitSuccess )
 import Graphics.Vty
 import Graphics.Vty.Widgets.All
 import Control.Monad
+import Control.Concurrent 
+
+import Channels
 
 data AppElements =
-    AppElements { messageList :: Widget (List String FormattedText)
-                , theBody :: Widget FormattedText
-                , titleBar :: Widget FormattedText
-                , bottomBar :: Widget FormattedText
-                , inputRow :: Widget Edit
+    AppElements { messageList      :: Widget (List String FormattedText)
+                , theBody          :: Widget FormattedText
+                , titleBar         :: Widget FormattedText
+                , bottomBar        :: Widget FormattedText
+                , inputRow         :: Widget Edit
                 , messageListLimit :: Widget (VLimit (List String FormattedText))
-                , uis :: Collection
+                , ctxt             :: RenderContext
+                , uis              :: Collection
                 }
 
 -- Visual attributes.
@@ -41,6 +46,10 @@ mkAppElements = do
   ll <- vLimit 5 ml
 
   c <- newCollection
+  
+  let cx = defaultContext { normalAttr = normAttr
+                          , focusAttr = focAttr
+                          }
 
   return $ AppElements { messageList      = ml
                        , theBody          = b
@@ -48,6 +57,7 @@ mkAppElements = do
                        , bottomBar        = bb
                        , inputRow         = e
                        , messageListLimit = ll
+                       , ctxt             = cx
                        , uis              = c
                        }
 
@@ -67,29 +77,36 @@ updateFooterNums st w = do
 updateText :: Widget FormattedText -> String -> IO ()
 updateText ft t = setText ft ("[" ++ t ++ "]")
 
-main :: IO ()
-main = do
+initUI :: Channels -> IO AppElements
+initUI (Channels toUI fromUI) = do
   
   st <- mkAppElements
   ui <- buildUi st
   fg <- newFocusGroup
   showMainUI <- addToCollection (uis st) ui fg
   addToFocusGroup fg (inputRow st)
+  
+  let addToMessageList s = do
+        addToList (messageList st) s =<< plainText s
+        scrollDown (messageList st)
 
   inputRow st `onActivate` \e -> do
          s <- getEditText e
-         addToList (messageList st) s =<< plainText s
-         scrollDown (messageList st)
+         writeChan fromUI s
+         addToMessageList ("echo : " ++ s)
          when (take 1 s == "q") (exitSuccess)
          setEditText e ""
          
   setEditText (inputRow st) ""
   focus (inputRow st)
   
+  forkIO $ forever $ do 
+    msg <- readChan toUI
+    schedule $ addToMessageList ("relay : " ++ msg)
+
+
   updateText (titleBar st)  "Topic : irc-relay rocks! github.com/mbrock/irc-relay"
   updateText (bottomBar st) "connected to irc.freenode.net"
+      
+  return st
 
-  -- Enter the event loop.
-  runUi (uis st) $ defaultContext { normalAttr = normAttr
-                                  , focusAttr = focAttr
-                                  }

@@ -1,9 +1,12 @@
 {-# LANGUAGE ViewPatterns #-}
-module Main where
+module Connection where
 
 import Network
 import Control.Monad 
-import Control.Concurrent (threadDelay)
+import Control.Concurrent 
+import Control.Concurrent.Chan
+
+-- import Graphics.Vty.Widgets.All (schedule)
 
 import System.IO 
 import System.Environment
@@ -11,17 +14,31 @@ import System.Environment
 import Data.Maybe (maybeToList)
 import Text.JSON
 
-main = withSocketsDo $ do
-    -- Connect to the relay
-    [addr,port] <- getArgs
+import Channels
+
+initRelayConnection (Channels toUI fromUI) addr port = do
+    
     h <- connectTo addr (PortNumber (fromIntegral (read port)))
     hSetBuffering h LineBuffering
-
+    
+    forkOS $ forever $ do
+      w <- hGetLine h
+      writeChan toUI w
+      -- putStrLn $ "toUI : " ++ w
+      
+    forkOS $ forever $ do
+      s <- readChan fromUI
+      -- putStrLn $ "fromUI : " ++ s
+      hPutStrLn h s
+      
+    oldStuff h
+       
+oldStuff h = do
     -- Send connect messages, USER and NICK
     let ircs = "irc.freenode.net"
         cmsg = encode (connectMessage ircs "6667")
-        umsg = encode (userMessage "irc-relay-hs-client" ircs)
-        nmsg = encode (nickMessage "irc-relay-hs-client" ircs)        
+        umsg = encode (userMessage "irc-relay-3" ircs)
+        nmsg = encode (nickMessage "irc-relay-3" ircs)        
         sleep = threadDelay . (* 10^6)
     sleep 1
     hPutStrLn h cmsg
@@ -31,7 +48,7 @@ main = withSocketsDo $ do
     hPutStrLn h nmsg
     
     -- Print the responses
-    hGetContents h >>= putStrLn
+    -- hGetContents h >>= putStrLn
 
 connectMessage :: String -> String -> JSObject String
 connectMessage hostname port = toJSObject [ ("command","connect")
