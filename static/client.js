@@ -40,7 +40,7 @@ $(document).ready( function() {
     // The callbacks
     ws.onmessage = function(evt) { 
         data = JSON.parse(evt.data);
-        outputMessage(data.text);
+        outputMessage( data.prefix.slice(0, data.prefix.indexOf('!') ) + ": " + data.text);
     };
     ws.onclose = function() { outputMessage("Socket closed"); };
     ws.onopen = function()  {
