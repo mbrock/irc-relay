@@ -1,3 +1,4 @@
+
 -- This Agda file serves as documentation for the messages client to/from relay.
 -- Use type families/associated types to do this in Haskell
 

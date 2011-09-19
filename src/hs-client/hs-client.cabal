@@ -1,0 +1,26 @@
+Name:                hs-client
+Version:             0.1
+Synopsis:            IRC Relay Haskell Client
+
+-- A longer description of the package.
+-- Description:         
+
+Homepage:            github.com/mbrock/irc-relay
+License:             BSD3
+License-file:        LICENSE
+Author:              Dan Rosén
+Maintainer:          danr@fripost.org
+Category:            Network
+Build-type:          Simple
+
+Cabal-version:       >=1.2
+
+Executable hs-client
+
+  Main-is:             HsClient.hs
+  
+  Build-depends:       base,
+                       network,
+                       json
+                       
+  
