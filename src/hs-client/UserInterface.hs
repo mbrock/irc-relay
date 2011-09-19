@@ -7,6 +7,7 @@ import Graphics.Vty
 import Graphics.Vty.Widgets.All
 import Control.Monad
 import Control.Concurrent 
+import Data.IORef
 
 import Channels
 
@@ -61,19 +62,6 @@ mkAppElements = do
                        , uis              = c
                        }
 
-
-updateFooterNums :: AppElements -> Widget (List a b) -> IO ()
-updateFooterNums st w = do
-  result <- getSelected w
-  sz <- getListSize w
-  let msg = case result of
-              Nothing -> "--/--"
-              Just (i, _) ->
-                  "-" ++ (show $ i + 1) ++ "/" ++
-                          (show sz) ++ "-"
-  setText (bottomBar st) msg
-
-
 updateText :: Widget FormattedText -> String -> IO ()
 updateText ft t = setText ft ("[" ++ t ++ "]")
 
@@ -104,9 +92,8 @@ initUI (Channels toUI fromUI) = do
     msg <- readChan toUI
     schedule $ addToMessageList ("relay : " ++ msg)
 
-
-  updateText (titleBar st)  "Topic : irc-relay rocks! github.com/mbrock/irc-relay"
-  updateText (bottomBar st) "connected to irc.freenode.net"
+  updateText (titleBar st)  "titleBar"
+  updateText (bottomBar st) "bottomBar"
       
   return st
 
