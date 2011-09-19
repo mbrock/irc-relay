@@ -1,0 +1,47 @@
+
+Make clients be able to send higher-level messages (Define and document these),
+Relay should translate these to the Backend
+From this log:
+
+(2011-09-19)
+10:07 <@danr> Jag vill att man ska kunna skicka typ (command: user, name : irc-relay), etc, istället för (command : send, message : (command : user")
+10:07 <@danr> hmm
+10:07 <@danr> Fast oifs, vi har server-fältet också.
+10:11 <@danr> mbrk: blir det fult om man har ett server-fält i varje meddelande?
+10:11 <@danr> Eller borde vi ha det som nu?
+10:11 <@danr> Det är inte så dumt som jag tänkte mig först
+10:12 < mbrk> protokollet är nog ganska dumt... men det är väl server-fält i alla medellanden?
+10:12 <@danr> Inte i IRC-meddelanden, nej
+10:12 < mbrk> nu är det väl command, server och message som är de fälten som alla meddelanden består av... utom connect
+10:12 <@danr> Men i IRCMEssage i backend
+10:13 <@danr> Nej
+10:13 <@danr> Nu har man command=send, och sen i message har man en ny som är commandd = SEND/USER/TOPIC/...
+10:14 < mbrk> oj...
+10:14 <@danr> mbrk: {"command":"send","server":"irc.freenode.net","message":{"command":"NICK","params":"mamaoeu"}}
+10:14 <@danr> Som i den
+10:14 < mbrk> ja
+10:15 <@danr> jag tänker mig
+10:15 <@danr> {"command":"NICK","server":"irc.freenode.net", och sen beroende på vad command är fler fält}
+10:15 <@danr> så det är en beroende typ som beror på command :D
+10:15 <@danr> fancy-pants
+10:16 < mbrk> aha ok
+10:16 <@danr> Jag ska nog skriva det här i Agda :D
+10:16 <@danr> FAN!
+10:16 <@danr> Det vore tufft.
+10:16 <@danr> Göra vty-ui bindings i Agda
+10:16 < mbrk> gör't!!
+10:16 <@danr> ^^
+10:16 <@danr> Och sen använda Epic-backenden
+10:16 < mbrk> :)
+10:16 <@danr> Heheheee
+10:17 <@danr> ok men vad tror du att göra en sådan förändring?
+10:17 <@danr> Jag gillar inte att klienterna ska behöva hålla på och pilla med params och skit
+10:17 <@danr> Det är för lågnivå
+10:17 < mbrk> jag tror att jag håller med
+10:17 < mbrk> det borde kanske göras i relayen
+10:18 <@danr> Aha, inte ens i backend?
+10:18 <@danr> Relay gör om till IRC-rfc-meddelande till backenden?
+10:18 <@danr> och backenden just does it?
+10:18 < mbrk> mm
+10:18 <@danr> OK
+10:19 < mbrk> backenden är som buddhanaturen, klar, oföränderlig och evig
