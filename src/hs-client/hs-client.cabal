@@ -17,10 +17,12 @@ Cabal-version:       >=1.2
 
 Executable hs-client
 
-  Main-is:             HsClient.hs
+  Main-is:             Main.hs
   
   Build-depends:       base,
                        network,
-                       json
+                       json,
+                       vty,
+                       vty-ui
                        
   
