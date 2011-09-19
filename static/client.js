@@ -9,8 +9,8 @@ var historyPos = 0;
 // Outputs the message in the message div
 function outputMessage(string) {
     $("#messages").append("<div class=\"line\">"+string+"</div>");
-    /// $("#messages").scrollTop());
-    
+    // Scroll along as messages are added
+    $(document).scrollTop($("#messages")[0].scrollHeight);
 }
 
 function stringToCommand(string){
